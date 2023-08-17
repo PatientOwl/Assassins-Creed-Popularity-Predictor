@@ -70,7 +70,7 @@ for page in range(1, pages):
             formatted_update = check_update.replace('st', '')
             print(formatted_update)
             dateString = formatted_update
-            dateTimeObj = datetime.strptime(dateString, "%d %B %Y")
+            dateTimeObj = datetime.strptime(dateString, "%d %b %y")
             last_updated.append(dateTimeObj)
             
 
@@ -78,7 +78,7 @@ for page in range(1, pages):
             formatted_update = check_update.replace('nd', '')
             print(formatted_update)
             dateString = formatted_update
-            dateTimeObj = datetime.strptime(dateString, "%d %B %Y")
+            dateTimeObj = datetime.strptime(dateString, "%d %b %y")
             last_updated.append(dateTimeObj)
             
 
@@ -86,15 +86,15 @@ for page in range(1, pages):
             formatted_update = check_update.replace('rd', '')
             print(formatted_update)
             dateString = formatted_update
-            dateTimeObj = datetime.strptime(dateString, "%d %B %Y")
+            dateTimeObj = datetime.strptime(dateString, "%d %b %y")
             last_updated.append(dateTimeObj)
             
 
         if 'th' in check_update:
-            formated_update = check_update.replace('th', '')
+            formatted_update = check_update.replace('th', '')
             print(formatted_update)
             dateString = formatted_update
-            dateTimeObj = datetime.strptime(dateString, "%d %B %Y")
+            dateTimeObj = datetime.strptime(dateString, "%d %b %y")
             last_updated.append(dateTimeObj)
             
 
