@@ -26,7 +26,7 @@ sales_ot = []
 sales_gl = []
 
 urlhead = 'https://www.vgchartz.com/gamedb/?page='
-urltail = '&name=Assassin%27s+Creed&console=&region=All&developer=&publisher=&genre=&boxart=Both&ownership=Both'
+urltail = '&console=&region=All&developer=&publisher=&genre=&boxart=Both&ownership=Both'
 urltail += '&results=1000&order=Sales&showtotalsales=1&showtotalsales=1&showpublisher=1'
 urltail += '&showpublisher=1&showvgchartzscore=0&shownasales=1&showdeveloper=1&showcriticscore=1'
 urltail += '&showpalsales=1&showpalsales=1&showreleasedate=1&showuserscore=1&showjapansales=1'
