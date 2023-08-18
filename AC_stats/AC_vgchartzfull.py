@@ -1,12 +1,14 @@
 '''
-AC_vgchartzfull.py
+
+
 '''
-from bs4 import BeautifulSoup, element
+from bs4 import BeautifulSoup, element # 'element' is a temporary element for sub_soup
 from datetime import datetime
 import urllib.request
 import pandas as pd
 import numpy as np
 
+# setting up columns with empty arrays
 pages = 19
 rec_count = 0
 rank = []
@@ -25,6 +27,8 @@ sales_ot = []
 sales_gl = []
 last_updated = []
 
+# Scraping all games with the name "Assassin's Creed" from the GameDB 
+# table found on vgchartz.com
 urlhead = 'https://www.vgchartz.com/gamedb/?page='
 urltail = '&name=Assassin%27s+Creed&console=&region=All&developer=&publisher=&genre=&boxart=Both&ownership=Both'
 urltail += '&results=1000&order=Game&showtotalsales=1&showtotalsales=1&showpublisher=1'
@@ -32,97 +36,118 @@ urltail += '&showpublisher=1&showvgchartzscore=0&shownasales=1&showdeveloper=1&s
 urltail += '&showpalsales=1&showpalsales=1&showreleasedate=1&showuserscore=1&showjapansales=1'
 urltail += '&showlastupdate=1&showothersales=1&showgenre=1&sort=GL'
 
-# cycles thorugh each page of results
+# cycles through each page of the GameDB results with a for loop
 for page in range(1, pages):
-    surl = urlhead + str(page) + urltail
-    r = urllib.request.urlopen(surl).read()
-    soup = BeautifulSoup(r, "html.parser")
+    surl = urlhead + str(page) + urltail #page.content
+    r = urllib.request.urlopen(surl).read() #opens URL, reads it, and returns the HTML string, becoming the page.content
+    soup = BeautifulSoup(r, "html.parser") 
     print(f"Page: {page}")
 
-    # we have to search for <a> tags with game urls to get the 
-    # name of the game 
+    # searching for <a> tags with game urls to get the name of the game 
+    # using list(filter(lambda x:)) to filter for each 'href' (URL) attribute (or the link element)
+    # 'href' stands for hyperlink reference
+    # converting filtered lambda x (<a> href tag) into a list
     game_tags = list(filter(
         lambda x: 'href' in x.attrs and x.attrs['href'].startswith('https://www.vgchartz.com/game/'),
-        # discard the first 10 elements because those
-        # links are in the navigation bar
         soup.find_all("a")
-        ))
-
+    ))
+    #################################
+    # Retrieving data for each game #
+    #################################
     for tag in game_tags:
 
-        # add name to list
+        # adding game name to game_name[] list
+        # splitting the string name of game, joining them as one string,
+        # and then appending to game_name array
         game_name.append(" ".join(tag.string.split()))
+
+        # print that it is fetching the game
         print(f"{rec_count + 1} Fetch data for game {game_name[-1]}")
 
-        # get different attributes
-        # traverse up the DOM tree
+        ################################
+        # Getting different attributes #
+        ################################
+
+        # using .parent to traverse up the DOM tree from the game name <a>
         data = tag.parent.parent.find_all("td")
 
-        # reformatting the timestamp of 'Last Update'
+        # filling last_update[]
+        # reformatting the timestamp of 'Last Update' column on website
         check_update = ' '.join(data[14].string.split())
-        print(check_update)
+        
         # different format for the full date
         if check_update == 'N/A':
             last_updated.append('N/A')
-            print(check_update)
 
         if 'st' in check_update:
             formatted_update = check_update.replace('st', '')
-            print(formatted_update)
             dateString = formatted_update
             dateTimeObj = datetime.strptime(dateString, "%d %b %y")
             last_updated.append(dateTimeObj)
             
-
         if 'nd' in check_update:
             formatted_update = check_update.replace('nd', '')
-            print(formatted_update)
             dateString = formatted_update
             dateTimeObj = datetime.strptime(dateString, "%d %b %y")
             last_updated.append(dateTimeObj)
             
-
         if 'rd' in check_update:
             formatted_update = check_update.replace('rd', '')
-            print(formatted_update)
             dateString = formatted_update
             dateTimeObj = datetime.strptime(dateString, "%d %b %y")
             last_updated.append(dateTimeObj)
             
-
         if 'th' in check_update:
             formatted_update = check_update.replace('th', '')
-            print(formatted_update)
             dateString = formatted_update
             dateTimeObj = datetime.strptime(dateString, "%d %b %y")
             last_updated.append(dateTimeObj)
             
-
+        # filling platform[]
         platform.append(data[3].find('img').attrs['alt'])
+
+        # filling publisher[]
         publisher.append(data[4].string)
+
+        # filling developer[]
         developer.append(data[5].string)
+
+        # filling critic_score[]
         critic_score.append(
             float(data[6].string) if
             not data[6].string.startswith("N/A") else np.nan)
+
+        # filling user_score[]
         user_score.append(
             float(data[7].string) if
             not data[7].string.startswith("N/A") else np.nan)
+
+        # filling sales_na[]
         sales_na.append(
             float(data[9].string[:-1]) if
             not data[9].string.startswith("N/A") else np.nan)
+
+        # filling sales_pal[]
         sales_pal.append(
             float(data[10].string[:-1]) if
             not data[10].string.startswith("N/A") else np.nan)
+
+        # filling sales_jp[]
         sales_jp.append(
             float(data[11].string[:-1]) if
             not data[11].string.startswith("N/A") else np.nan)
+
+        # filling sales_ot[]
         sales_ot.append(
             float(data[12].string[:-1]) if
             not data[12].string.startswith("N/A") else np.nan)
+
+        # filling sales_gl[]
         sales_gl.append(
             float(data[8].string[:-1]) if
             not data[8].string.startswith("N/A") else np.nan)
 
+        # filling year[]
         release_year = data[13].string.split()[-1]
         # different format for year
         if release_year.startswith('N/A'):
@@ -134,14 +159,18 @@ for page in range(1, pages):
                 year_to_add = np.int32("20" + release_year)
             year.append(year_to_add)
 
-        # go to every individual website to get genre info
+        # filling genre[]
+        # going to every individual website to get genre info
         url_to_game = tag.attrs['href']
         site_raw = urllib.request.urlopen(url_to_game).read()
         sub_soup = BeautifulSoup(site_raw, "html.parser")
-        # again, the info box is inconsistent among games so we
-        # have to find all the h2 and traverse from that to the genre name
+
+        # the info box is inconsistent among games so we have to find 
+        # all the <h2>s and traverse from that to the genre name,
+        # since 'Genre' is an <h2> tag
         h2s = sub_soup.find("div", {"id": "gameGenInfoBox"}).find_all('h2')
-        # make a temporary tag here to search for the one that contains
+        
+        # making a temporary tag here to search for the <h2> that contains
         # the word "Genre"
         temp_tag = element.Tag
         for h2 in h2s:
@@ -149,6 +178,7 @@ for page in range(1, pages):
                 temp_tag = h2
         genre.append(temp_tag.next_sibling.string)
 
+        # recording score of how many total games have been fetched
         rec_count += 1
 
 columns = {
