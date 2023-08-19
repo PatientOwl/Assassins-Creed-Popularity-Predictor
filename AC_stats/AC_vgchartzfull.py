@@ -1,15 +1,11 @@
-'''
-
-
-'''
-from bs4 import BeautifulSoup, element # 'element' is a temporary element for sub_soup
+from bs4 import BeautifulSoup, element  # 'element' is a temporary element for sub_soup
 from datetime import datetime
 import urllib.request
 import pandas as pd
 import numpy as np
 
 # setting up columns with empty arrays
-pages = 19
+pages = 2
 rec_count = 0
 rank = []
 game_name = []
@@ -38,9 +34,10 @@ urltail += '&showlastupdate=1&showothersales=1&showgenre=1&sort=GL'
 
 # cycles through each page of the GameDB results with a for loop
 for page in range(1, pages):
-    surl = urlhead + str(page) + urltail #page.content
-    r = urllib.request.urlopen(surl).read() #opens URL, reads it, and returns the HTML string, becoming the page.content
-    soup = BeautifulSoup(r, "html.parser") 
+    surl = urlhead + str(page) + urltail  # page.content
+    r = urllib.request.urlopen(
+        surl).read()  # opens URL, reads it, and returns the HTML string, becoming the page.content
+    soup = BeautifulSoup(r, "html.parser")
     print(f"Page: {page}")
 
     # searching for <a> tags with game urls to get the name of the game 
@@ -74,7 +71,7 @@ for page in range(1, pages):
         # filling last_update[]
         # reformatting the timestamp of 'Last Update' column on website
         check_update = ' '.join(data[14].string.split())
-        
+
         # different format for the full date
         if check_update == 'N/A':
             last_updated.append('N/A')
@@ -84,25 +81,25 @@ for page in range(1, pages):
             dateString = formatted_update
             dateTimeObj = datetime.strptime(dateString, "%d %b %y")
             last_updated.append(dateTimeObj)
-            
+
         if 'nd' in check_update:
             formatted_update = check_update.replace('nd', '')
             dateString = formatted_update
             dateTimeObj = datetime.strptime(dateString, "%d %b %y")
             last_updated.append(dateTimeObj)
-            
+
         if 'rd' in check_update:
             formatted_update = check_update.replace('rd', '')
             dateString = formatted_update
             dateTimeObj = datetime.strptime(dateString, "%d %b %y")
             last_updated.append(dateTimeObj)
-            
+
         if 'th' in check_update:
             formatted_update = check_update.replace('th', '')
             dateString = formatted_update
             dateTimeObj = datetime.strptime(dateString, "%d %b %y")
             last_updated.append(dateTimeObj)
-            
+
         # filling platform[]
         platform.append(data[3].find('img').attrs['alt'])
 
@@ -165,11 +162,11 @@ for page in range(1, pages):
         site_raw = urllib.request.urlopen(url_to_game).read()
         sub_soup = BeautifulSoup(site_raw, "html.parser")
 
-        # the info box is inconsistent among games so we have to find 
+        # the info box is inconsistent among games, so we have to find
         # all the <h2>s and traverse from that to the genre name,
         # since 'Genre' is an <h2> tag
         h2s = sub_soup.find("div", {"id": "gameGenInfoBox"}).find_all('h2')
-        
+
         # making a temporary tag here to search for the <h2> that contains
         # the word "Genre"
         temp_tag = element.Tag
@@ -182,7 +179,7 @@ for page in range(1, pages):
         rec_count += 1
 
 columns = {
-    #'Rank': rank,
+    # 'Rank': rank,
     'Last Updated': last_updated,
     'Name': game_name,
     'Platform': platform,
