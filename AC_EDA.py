@@ -61,7 +61,6 @@ for metric in col_metrics:
         plt.xlabel('Sales (in millions)')
 
 # Sales vs. critic scores
-
 # searching for outliers
 fig, ax = plt.subplots(1,1, figsize=(8, 5))
 sns.regplot(x='Critic_Score', y='Global_Sales', data=df2, ci=None, color='#75556c', x_jitter=.02).set(ylim=(0, 17.5))
