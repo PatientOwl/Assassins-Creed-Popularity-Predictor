@@ -30,7 +30,7 @@ print(f"\nAC games with accented characters: \n{df2[accented]['Name'].unique()}\
 # Exploratory Data Analysis #
 #############################
 
-# top values in the dataset
+# Top values in the dataset
 columns = ['Platform', 'Developer']
 
 for col in columns:
@@ -59,4 +59,14 @@ for metric in col_metrics:
         plt.xlabel('Score (out of 10)')
     else:
         plt.xlabel('Sales (in millions)')
-    plt.show()
+
+# Sales vs. critic scores
+
+# searching for outliers
+fig, ax = plt.subplots(1,1, figsize=(8, 5))
+sns.regplot(x='Critic_Score', y='Global_Sales', data=df2, ci=None, color='#75556c', x_jitter=.02).set(ylim=(0, 17.5))
+
+# cleaning the messy plot line above
+sns.regplot(x='Critic_Score', y='Global_Sales', data=df2.loc[df2.Year >= 2007], truncate=True, x_bins=15,
+            color='#75556c').set_title('Critic Score to Global Sales Correlation')
+plt.show()
