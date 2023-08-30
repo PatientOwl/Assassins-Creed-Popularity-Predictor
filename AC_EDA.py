@@ -2,18 +2,20 @@ import string
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from math import ceil
 
-# 'r' in front converts normal string into a raw string
 df = pd.read_csv(r"C:\Users\cvhs3\Desktop\Python_files\Assassin's Creed Project\AC_stats\AC_vgsales.csv")
+# 'r' in front converts normal string into a raw string
+
 print(df)
 
 # dropping all rows with empty columns ranging from 'Critic_Score' to 'Global_Score'
 df2 = df.dropna(subset=['Critic_Score', 'User_Score', 'NA_Sales', 'PAL_Sales', 'JP_Sales', 'Other_Sales',
                         'Global_Sales'], how='all').reset_index(drop=True)
+
 # replacing 'Global_Sales' values as sum of all sales
 df2['Global_Sales'] = df2.loc[:, 'NA_Sales':'Other_Sales'].sum(axis=1)
 pd.options.mode.chained_assignment = None  # disables SettingWithCopyWarning
-print(df2)
 
 # ******************* Sprinkle ********************* #
 # checking if there are special characters in 'Name' column
@@ -26,10 +28,9 @@ accented = df2.Name.str.encode('ascii', errors='ignore') != df2.Name.str.encode(
 print(f"\nAC games with accented characters: \n{df2[accented]['Name'].unique()}\n")
 # ********************** End *********************** #
 
-#############################
-# Exploratory Data Analysis #
-#############################
-
+'''
+************* Exploratory Data Analysis **************
+'''
 # Top values in the dataset
 columns = ['Platform', 'Developer']
 
@@ -60,12 +61,41 @@ for metric in col_metrics:
     else:
         plt.xlabel('Sales (in millions)')
 
-# Sales vs. critic scores
+'''Sales vs. critic scores'''
 # searching for outliers
-fig, ax = plt.subplots(1,1, figsize=(8, 5))
+fig, ax = plt.subplots(1, 1, figsize=(12, 5))
+
 sns.regplot(x='Critic_Score', y='Global_Sales', data=df2, ci=None, color='#75556c', x_jitter=.02).set(ylim=(0, 17.5))
 
 # cleaning the messy plot line above
 sns.regplot(x='Critic_Score', y='Global_Sales', data=df2.loc[df2.Year >= 2007], truncate=True, x_bins=15,
             color='#75556c').set_title('Critic Score to Global Sales Correlation')
+
+# Defining "hits" as those with sales above 1 million sales
+dfa = df2
+dfa = dfa.copy()
+dfb = dfa[['Name', 'Platform', 'Genre', 'Publisher', 'Year', 'Critic_Score', 'Global_Sales']]
+dfb = dfb.dropna().reset_index(drop=True)
+df3 = dfb[['Platform', 'Genre', 'Publisher', 'Year', 'Critic_Score', 'Global_Sales']]
+df3['Hit'] = df3['Global_Sales']
+df3.drop('Global_Sales', axis=1, inplace=True)
+
+
+def hit(sales):
+    if sales >= 1:
+        return 1
+    else:
+        return 0
+
+
+df3['Hit'] = df3['Hit'].apply(lambda x: hit(x))
+
+# Logistic Regression plot
+sns.regplot(x='Critic_Score', y='Hit', data=df3, logistic=True, n_boot=500, y_jitter=.04, color='#75556c')\
+    .set_title('Logistic Regression Between Critic Scores and Hits (>= 1 mil Sales)')
 plt.show()
+
+'''
+************* Prediction Modeling ************** 
+'''
+
