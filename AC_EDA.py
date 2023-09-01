@@ -2,7 +2,8 @@ import string
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from math import ceil
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
 
 df = pd.read_csv(r"C:\Users\cvhs3\Desktop\Python_files\Assassin's Creed Project\AC_stats\AC_vgsales.csv")
 # 'r' in front converts normal string into a raw string
@@ -17,6 +18,7 @@ df2 = df.dropna(subset=['Critic_Score', 'User_Score', 'NA_Sales', 'PAL_Sales', '
 df2['Global_Sales'] = df2.loc[:, 'NA_Sales':'Other_Sales'].sum(axis=1)
 pd.options.mode.chained_assignment = None  # disables SettingWithCopyWarning
 
+
 # ******************* Sprinkle ********************* #
 # checking if there are special characters in 'Name' column
 alphabet = string.ascii_letters + string.punctuation
@@ -28,9 +30,8 @@ accented = df2.Name.str.encode('ascii', errors='ignore') != df2.Name.str.encode(
 print(f"\nAC games with accented characters: \n{df2[accented]['Name'].unique()}\n")
 # ********************** End *********************** #
 
-'''
-************* Exploratory Data Analysis **************
-'''
+
+'''************* Exploratory Data Analysis **************'''
 # Top values in the dataset
 columns = ['Platform', 'Developer']
 
@@ -61,7 +62,7 @@ for metric in col_metrics:
     else:
         plt.xlabel('Sales (in millions)')
 
-'''Sales vs. critic scores'''
+# Sales vs. critic scores
 # searching for outliers
 fig, ax = plt.subplots(1, 1, figsize=(12, 5))
 
@@ -75,7 +76,10 @@ sns.regplot(x='Critic_Score', y='Global_Sales', data=df2.loc[df2.Year >= 2007], 
 dfa = df2
 dfa = dfa.copy()
 dfb = dfa[['Name', 'Platform', 'Genre', 'Publisher', 'Year', 'Critic_Score', 'Global_Sales']]
-dfb = dfb.dropna().reset_index(drop=True)
+
+# removing all NaN values because scitkit-learn RandomForestClassifier cannot handle missing values
+#dfb = dfb.dropna().reset_index(drop=True)
+
 df3 = dfb[['Platform', 'Genre', 'Publisher', 'Year', 'Critic_Score', 'Global_Sales']]
 df3['Hit'] = df3['Global_Sales']
 df3.drop('Global_Sales', axis=1, inplace=True)
@@ -93,9 +97,18 @@ df3['Hit'] = df3['Hit'].apply(lambda x: hit(x))
 # Logistic Regression plot
 sns.regplot(x='Critic_Score', y='Hit', data=df3, logistic=True, n_boot=500, y_jitter=.04, color='#75556c')\
     .set_title('Logistic Regression Between Critic Scores and Hits (>= 1 mil Sales)')
-plt.show()
 
-'''
-************* Prediction Modeling ************** 
-'''
 
+'''************* Prediction Modeling **************'''
+df_copy = pd.get_dummies(df3)  # getting dummy variables from categorical data
+df4 = df_copy
+y = df4['Hit'].values
+df4 = df4.drop(['Hit'], axis=1)
+X = df4.values
+
+Xtrain, Xtest, ytrain, ytest = train_test_split(X, y, test_size=0.50, random_state=2)
+
+# Testing prediction accuracy with linear regression and random forest classifier
+radm = RandomForestClassifier(random_state=2).fit(Xtrain, ytrain)
+y_val_1 = radm.predict_proba(Xtest)
+print("Validation accuracy: ", sum(pd.DataFrame(y_val_1).idxmax(axis=1).values == ytest)/len(ytest))
