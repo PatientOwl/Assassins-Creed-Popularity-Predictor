@@ -78,7 +78,7 @@ dfa = dfa.copy()
 dfb = dfa[['Name', 'Platform', 'Genre', 'Publisher', 'Year', 'Critic_Score', 'Global_Sales']]
 
 # removing all NaN values because scitkit-learn RandomForestClassifier cannot handle missing values
-#dfb = dfb.dropna().reset_index(drop=True)
+dfb = dfb.dropna().reset_index(drop=True)
 
 df3 = dfb[['Platform', 'Genre', 'Publisher', 'Year', 'Critic_Score', 'Global_Sales']]
 df3['Hit'] = df3['Global_Sales']
