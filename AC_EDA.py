@@ -4,6 +4,10 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import IterativeImputer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import LabelEncoder
 
 df = pd.read_csv(r"C:\Users\cvhs3\Desktop\Python_files\Assassin's Creed Project\AC_stats\AC_vgsales.csv")
 # 'r' in front converts normal string into a raw string
@@ -77,8 +81,44 @@ dfa = df2
 dfa = dfa.copy()
 dfb = dfa[['Name', 'Platform', 'Genre', 'Publisher', 'Year', 'Critic_Score', 'Global_Sales']]
 
-# removing all NaN values because scitkit-learn RandomForestClassifier cannot handle missing values
-dfb = dfb.dropna().reset_index(drop=True)
+# following commented code removes all NaN values because scitkit-learn RandomForestClassifier cannot handle missing
+# Critic Score values
+# dfb = dfb.dropna().reset_index(drop=True)
+# so we will use an imputer to predict and fill in missing Critic Scores
+missing_mask = dfb.isna()
+print(missing_mask)
+
+# converting columns with strings to category dtype
+'''
+dfb['Name'] = dfb['Name'].astype('category')
+dfb['Platform'] = dfb['Platform'].astype('category')
+dfb['Genre'] = dfb['Genre'].astype('category')
+dfb['Publisher'] = dfb['Publisher'].astype('category')
+print(dfb.dtypes)
+
+cat_columns = dfb.select_dtypes(['category']).columns
+print(cat_columns)
+dfb[cat_columns] = dfb[cat_columns].apply(lambda x: x.cat.codes)
+print(dfb)
+'''
+le = LabelEncoder()
+
+for var in dfb[['Name', 'Platform', 'Genre', 'Publisher']]:
+    dfb[var] = le.fit_transform(dfb[var])
+
+print(dfb)
+
+for var in dfb[['Name', 'Platform', 'Genre', 'Publisher']]:
+    dfb[var] = le.inverse_transform(dfb[var])
+
+imputer = IterativeImputer(max_iter=10, random_state=100)
+imputed_values = imputer.fit_transform(dfb)
+
+
+
+dfb[missing_mask] = imputed_values[missing_mask]
+
+
 
 df3 = dfb[['Platform', 'Genre', 'Publisher', 'Year', 'Critic_Score', 'Global_Sales']]
 df3['Hit'] = df3['Global_Sales']
@@ -100,15 +140,18 @@ sns.regplot(x='Critic_Score', y='Hit', data=df3, logistic=True, n_boot=500, y_ji
 
 
 '''************* Prediction Modeling **************'''
-df_copy = pd.get_dummies(df3)  # getting dummy variables from categorical data
-df4 = df_copy
+df3_copy = pd.get_dummies(df3)  # getting dummy variables from categorical data
+df4 = df3_copy
 y = df4['Hit'].values
 df4 = df4.drop(['Hit'], axis=1)
 X = df4.values
 
 Xtrain, Xtest, ytrain, ytest = train_test_split(X, y, test_size=0.50, random_state=2)
 
-# Testing prediction accuracy with linear regression and random forest classifier
+# Testing prediction accuracy with random forest classifier
 radm = RandomForestClassifier(random_state=2).fit(Xtrain, ytrain)
 y_val_1 = radm.predict_proba(Xtest)
 print("Validation accuracy: ", sum(pd.DataFrame(y_val_1).idxmax(axis=1).values == ytest)/len(ytest))
+
+# Testing prediction accuracy with linear regression
+
