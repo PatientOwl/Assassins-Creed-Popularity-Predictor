@@ -108,13 +108,12 @@ for var in dfb[['Name', 'Platform', 'Genre', 'Publisher']]:
 
 print(dfb)
 
-for var in dfb[['Name', 'Platform', 'Genre', 'Publisher']]:
-    dfb[var] = le.inverse_transform(dfb[var])
-
 imputer = IterativeImputer(max_iter=10, random_state=100)
 imputed_values = imputer.fit_transform(dfb)
 
-
+# reversing transformed category codes to their original values
+for var in dfb[['Name', 'Platform', 'Genre', 'Publisher']]:
+    dfb[var] = le.inverse_transform(dfb[var])
 
 dfb[missing_mask] = imputed_values[missing_mask]
 
